@@ -15,11 +15,9 @@ const SplitMix = (seed:number|bigint = 0) => {
 }
 
 /**
- * generate key from a seed value. we seed a splitmix generator then
- * use that to sample digits, and accept or reject based on rules:
- *
- * digits 1-8: not 0, all different
- * digits 9-16: not 0, no repeating digits
+ * generate a key from a seed value. we seed a splitmix generator then
+ * use that to sample digits, and accept or reject based on key rules
+ * observed in the test program.
  * 
  * @param seed - pass 0 for a random seed
  * @returns key
@@ -36,6 +34,8 @@ export const GenerateKey = (seed: number|bigint = 0): bigint => {
   let last_digit = 0n;
   let key = 0n;
 
+  // digits 1-8: not 0, all different
+ 
   for (let i = 0; i < 8; i++) {
     key <<= 4n;
     for (;;) {
@@ -48,6 +48,8 @@ export const GenerateKey = (seed: number|bigint = 0): bigint => {
       }
     }
   }
+
+  // digits 9-16: not 0, no repeating digits
 
   for (let i = 0; i < 8; i++) {
     key <<= 4n;

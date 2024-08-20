@@ -1,5 +1,5 @@
 
-import { GenerateKey } from './keygen.js';
+export { GenerateKey } from './keygen.js';
 
 interface SqauresModule { 
   sample: (counter: bigint, key: bigint) => number,
@@ -33,29 +33,18 @@ export class SquaresRNG {
   protected fills = 0; // diagnostic
 
   /** don't call the constructor. use the factory method. */
-  protected constructor(seed: number|bigint, start: number|bigint) {
-    this.Seed(seed, start);
+  protected constructor(key: bigint, start: bigint) {
+    this.Reset(key, start);
   }
 
-  /**
-   * change the seed. generate a new key, reset the counter and flush 
-   * any cached samples.
-   */
-  public Seed(seed: number|bigint, start: number|bigint = 0) {
-
-    // generate key
-    this.key = GenerateKey(BigInt(seed));
-
-    // init counter
+  public Reset(key: bigint, start: bigint|number = 0) {
+    
+    this.key = key;
     this.counter = BigInt(start);
 
     // flush cache
     this.cache_pointer = this.cache_size;
 
-  }
-
-  public Jump(n: number|bigint) {
-    this.counter += BigInt(n);
   }
 
   public Next(): number {
@@ -105,9 +94,9 @@ export class SquaresRNG {
    * create an instance, using a seed to generate the key. optionally 
    * advance the counter.
    */
-  public static async CreateInstance(seed:number|bigint = 0, start_counter:number|bigint = 0): Promise<SquaresRNG> {
+  public static async CreateInstance(key:bigint, start_counter:number|bigint = 0): Promise<SquaresRNG> {
     await init_promise;
-    return new SquaresRNG(seed || new Date().getTime(), start_counter);    
+    return new SquaresRNG(key, BigInt(start_counter));
   }
 
   protected Fill(n: number, array: Float64Array) {
