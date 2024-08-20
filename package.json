@@ -1,0 +1,18 @@
+{
+  "name": "squares-rng",
+  "version": "2.0.0",
+  "type": "module",
+  "main": "dist/squares-rng.mjs",
+  "types": "dist/squares-rng.d.ts",
+  "devDependencies": {
+    "esbuild": "^0.23.1",
+    "typescript": "^5.5.4",
+    "wabt": "^1.0.36"
+  },
+  "scripts": {
+    "tsc": "tsc",
+    "watch": "node esbuild.mjs --watch --dev",
+    "build": "node esbuild.mjs",
+    "release": "tsc && node esbuild.mjs"
+  }
+}
