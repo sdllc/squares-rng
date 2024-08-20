@@ -1,15 +1,17 @@
 
 # Squares RNG
 
-This is an implementation of the [Squares counter-based PRNG][1]. For this 
-version we dropped emscripten and just wrote wasm (wat) by hand. Much smaller
-and slightly faster.
+This is an implementation of Bernard Widynski's [counter-based PRNG][1]. 
+The sampling is done in WASM. Relative to a pure-javascript version the 
+WASM version is 5x-6x faster.
 
-To keep things simple this one does key generation on the JS side. We could 
-move that to WASM later if desired.
+We use a cache and sample in blocks to reduce call overhead. When using
+the cache, sampling values is on par with calls to `Math.random`, except
+in webkit where it's slower (but webkit's `Math.random` is super fast).
 
-For performance, it's still advisable to sample in blocks of n (1024 - 2048
-seem optimal). The class uses a cache to pass through sampling.
+# Reference
+
+https://arxiv.org/pdf/2004.06278
 
 [1]: https://arxiv.org/pdf/2004.06278
 
