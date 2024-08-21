@@ -17,10 +17,11 @@ TODO: perf table
 
 Squares uses a key and a counter. The key needs an appropriate bit pattern
 to ensure quality output. We provide a utility method to generate a suitable 
-key from an integer seed. This is a low-effort key generator. There are likely
-to be collisions, but probably not from nearby seed values.
+key from an integer seed. 
 
-TODO: test collision rate
+This is a low-effort key generator. There are likely to be collisions, but 
+probably not from nearby seed values. We found no collisions within groups 
+of 4096 sequential values for the first 1e7 integers.
 
 
 # Using
