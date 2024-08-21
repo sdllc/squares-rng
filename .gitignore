@@ -3,3 +3,5 @@ node_modules
 test.mjs
 test2.mjs
 
+esbuild-metafile.json
+
