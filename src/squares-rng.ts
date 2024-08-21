@@ -1,14 +1,21 @@
 
 export { GenerateKey } from './keygen.js';
 
+/** esbuild will embed our compiled WASM as a base64 string */
+const wasm_base64 = process.env.WASM;
+
 interface SqauresModule { 
   sample: (counter: bigint, key: bigint) => number,
   sample_n: (counter: bigint, key: bigint, n: number) => void,
   memory: WebAssembly.Memory,
-} ;
+};
 
-const wasm_base64 = process.env.WASM;
 let wasm: SqauresModule;
+
+/** 
+ * this is a constant view into WASM memory as a float array, 
+ * so we're not constantly creating and deleting views.
+ */
 let view: Float64Array;
 
 const Init = async () => {
@@ -19,18 +26,41 @@ const Init = async () => {
   view = new Float64Array(wasm.memory.buffer);
 }
 
+/** single promise used by factory method to wait on WASM init. */
 const init_promise = Init();
 
 export class SquaresRNG {
 
   public key = 0n;
+
+  /** 
+   * current counter. because we use a cache, this does not reflect
+   * the index of the Next() value. you could work out that value with
+   * `cache_pointer` and `cache_size` though. 
+   */
   public counter = 0n;
 
+  /** 
+   * cache size. 1-2k seems to be optimal, but it might depend on use pattern.
+   */
   protected cache_size = 1024 * 2;
+
+  /**
+   * we have a separate cache, instead of just using WASM memory, because 
+   * we might have parallel instances of this generator, all using the same
+   * WASM module. in that case the WASM memory will get overwritten.
+   */
   protected cache = new Float64Array(this.cache_size);
+
+  /**
+   * current index into the cache. 
+   */
   protected cache_pointer = this.cache_size;
 
-  protected fills = 0; // diagnostic
+  /**
+   * diagnostic value, how often we've filled the cache.
+   */
+  protected fills = 0;
 
   /** don't call the constructor. use the factory method. */
   protected constructor(key: bigint, start: bigint) {
@@ -64,8 +94,12 @@ export class SquaresRNG {
     return this.cache[this.cache_pointer++];
   }
 
-  /** fills an array with random doubles */
-  public NextN(n: number, array?: Float64Array) {
+  /** 
+   * fills an array with random doubles. you can increase the
+   * number of samples in one shot, but not more than 8k or
+   * it won't fit in WASM memory (1 64k page).
+   */
+  public NextN(n: number, array?: Float64Array, chunk_size = this.cache_size) {
 
     if (!array) { array = new Float64Array(n); }
 
@@ -83,15 +117,9 @@ export class SquaresRNG {
       count = take;
     }
 
-    // we're collecting in chunks of (cache size)
-
-    // NOTE: on the last fill here we're (possibly) getting less
-    // than the normal chunk size. we should get the same amount
-    // and put the remainder back in the cache. TODO.
-
     while (count < n) {
       const view = array.subarray(count);
-      const take = Math.min(this.cache_size, n - count)
+      const take = Math.min(chunk_size, n - count)
       // console.info("filling" + take);
       this.Fill(take, view);
       count += take;
