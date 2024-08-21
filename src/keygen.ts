@@ -30,7 +30,7 @@ export const GenerateKey = (seed: number|bigint = 0): bigint => {
 
   const rng = SplitMix(seed);
 
-  const digits: BigInt[] = [];
+  const digits: bigint[] = [];
   let last_digit = 0n;
   let key = 0n;
 
