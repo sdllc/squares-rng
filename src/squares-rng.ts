@@ -37,6 +37,14 @@ export class SquaresRNG {
     this.Reset(key, start);
   }
 
+  /**
+   * reset to change the key or the counter. in addition to
+   * updating the values, it will flush the cache so you don't
+   * get stale values.
+   * 
+   * @param key 
+   * @param start 
+   */
   public Reset(key: bigint, start: bigint|number = 0) {
     
     this.key = key;
@@ -47,6 +55,7 @@ export class SquaresRNG {
 
   }
 
+  /** returns a random double in [0, 1] */
   public Next(): number {
     if (this.cache_pointer >= this.cache_size) {
       this.Fill(this.cache_size, this.cache);
@@ -55,6 +64,7 @@ export class SquaresRNG {
     return this.cache[this.cache_pointer++];
   }
 
+  /** fills an array with random doubles */
   public NextN(n: number, array?: Float64Array) {
 
     if (!array) { array = new Float64Array(n); }
@@ -91,14 +101,19 @@ export class SquaresRNG {
   }
 
   /**
-   * create an instance, using a seed to generate the key. optionally 
-   * advance the counter.
+   * create an instance. sets key and counter (default 0).
+   * 
+   * this method is async because WASM is async, and we need to ensure 
+   * that WASM is initialized before you make any calls to the sample 
+   * functions. 
+   * 
    */
   public static async CreateInstance(key:bigint, start_counter:number|bigint = 0): Promise<SquaresRNG> {
     await init_promise;
     return new SquaresRNG(key, BigInt(start_counter));
   }
 
+  /** generate n samples */
   protected Fill(n: number, array: Float64Array) {
     wasm.sample_n(this.counter, this.key, n);
     array.set(view.subarray(0, n));
@@ -107,8 +122,3 @@ export class SquaresRNG {
   }
   
 }
-
-/*
-console.info(wasm_base64.length, wasm_base64);
-console.info(rebuffed);
-*/

@@ -23,7 +23,6 @@ This is a low-effort key generator. There are likely to be collisions, but
 probably not from nearby seed values. We found no collisions within groups 
 of 4096 sequential values for the first 1e7 integers.
 
-
 # Using
 
 ```ts
