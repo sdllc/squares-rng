@@ -10,24 +10,16 @@ interface SqauresModule {
   memory: WebAssembly.Memory,
 };
 
-let wasm: SqauresModule;
+const buffer = Uint8Array.from(atob(wasm_base64 || ''), c => c.charCodeAt(0));
+const compiled = new WebAssembly.Module(buffer);
+const instance = new WebAssembly.Instance(compiled);
+const wasm = instance.exports as unknown as SqauresModule; // there must be a way to do this
 
 /** 
  * this is a constant view into WASM memory as a float array, 
  * so we're not constantly creating and deleting views.
  */
-let view: Float64Array;
-
-const Init = async () => {
-  const buffer = Uint8Array.from(atob(wasm_base64 || ''), c => c.charCodeAt(0));
-  const compiled = await WebAssembly.compile(buffer);
-  const instance = await WebAssembly.instantiate(compiled);
-  wasm = instance.exports as unknown as SqauresModule; // there must be a way to do this
-  view = new Float64Array(wasm.memory.buffer);
-}
-
-/** single promise used by factory method to wait on WASM init. */
-const init_promise = Init();
+const view = new Float64Array(wasm.memory.buffer);
 
 export class SquaresRNG {
 
@@ -62,9 +54,9 @@ export class SquaresRNG {
    */
   protected fills = 0;
 
-  /** don't call the constructor. use the factory method. */
-  protected constructor(key: bigint, start: bigint) {
-    this.Reset(key, start);
+  /** */
+  public constructor(key: bigint, start: number|bigint = 0) {
+    this.Reset(key, BigInt(start));
   }
 
   /**
@@ -126,19 +118,6 @@ export class SquaresRNG {
     }
 
     return array;
-  }
-
-  /**
-   * create an instance. sets key and counter (default 0).
-   * 
-   * this method is async because WASM is async, and we need to ensure 
-   * that WASM is initialized before you make any calls to the sample 
-   * functions. 
-   * 
-   */
-  public static async CreateInstance(key:bigint, start_counter:number|bigint = 0): Promise<SquaresRNG> {
-    await init_promise;
-    return new SquaresRNG(key, BigInt(start_counter));
   }
 
   /** generate n samples */

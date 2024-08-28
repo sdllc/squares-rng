@@ -38,7 +38,7 @@ bc8f2e15d5c8ef82
 
  **/
 
-const rng = await SquaresRNG.CreateInstance(key)
+const rng = new SquaresRNG(key)
 
 for (let i = 0; i< 8; i++) {
   console.info(rng.Next().toFixed(5));
